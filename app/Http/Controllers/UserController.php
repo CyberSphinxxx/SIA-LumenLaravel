@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use App\Models\User;
+use Illuminate\Http\Response;
+use App\Traits\ApiResponser;
+use Illuminate\Http\Request;
+use DB;
 
 class UserController extends Controller
 {
@@ -57,7 +59,7 @@ class UserController extends Controller
         $rules = [
             'username' => 'required|max:20',
             'password' => 'required|max:20',
-            'gender' => 'required|in:Male,Female',
+            'gender' => 'required|in:Male,Female,Others',
         ];
         
         $this->validate($request, $rules);

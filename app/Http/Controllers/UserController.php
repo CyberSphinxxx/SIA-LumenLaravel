@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use App\Models\User;
 
 class UserController extends Controller
@@ -14,15 +15,24 @@ class UserController extends Controller
         $this->request = $request;
     }
 
-    public function getUsers()
+    /**
+     * Helper method to return a successful JSON response
+     */
+    protected function successResponse($data, $code = Response::HTTP_OK)
     {
-        $users = User::all();
-        return response()->json($users, 200);
+        return response()->json(['data' => $data], $code);
+    }
+
+    /**
+     * Helper method to return an error JSON response
+     */
+    protected function errorResponse($message, $code)
+    {
+        return response()->json(['error' => $message, 'code' => $code], $code);
     }
 
     /**
      * Return the list of users
-     * @return Illuminate\Http\Response
      */
     public function index()
     {
@@ -30,6 +40,18 @@ class UserController extends Controller
         return $this->successResponse($users);
     }
 
+    /**
+     * Get all users
+     */
+    public function getUsers()
+    {
+        $users = User::all();
+        return $this->successResponse($users);
+    }
+
+    /**
+     * Add a new user
+     */
     public function add(Request $request)
     {
         $rules = [
@@ -37,35 +59,28 @@ class UserController extends Controller
             'password' => 'required|max:20',
             'gender' => 'required|in:Male,Female',
         ];
+        
         $this->validate($request, $rules);
         $user = User::create($request->all());
         return $this->successResponse($user, Response::HTTP_CREATED);
     }
 
     /**
-     * Obtains and show one user
-     * @return Illuminate\Http\Response
+     * Show details of a single user
      */
     public function show($id) 
     {
-        $user = User::findOrFail($id);
-        return $this->successResponse($user);
+        $user = User::find($id);
 
-        // old code
-        /*
-        $user = User::where('userid', $id)->first();
-        if($user){
-            return $this->successResponse($user);
+        if (!$user) {
+            return $this->errorResponse('User ID does not exist', Response::HTTP_NOT_FOUND);
         }
-        {
-            return $this->errorResponse('User ID Does Not Exists', Response::HTTP_NOT_FOUND);
-        }
-        */
+
+        return $this->successResponse($user);
     }
 
     /**
-     * Update an existing author
-     * @return Illuminate\Http\Response
+     * Update an existing user
      */
     public function update(Request $request, $id)
     {
@@ -74,57 +89,36 @@ class UserController extends Controller
             'password' => 'max:20',
             'gender' => 'in:Male,Female',
         ];
+
         $this->validate($request, $rules);
-        $user = User::findOrFail($id);
+        $user = User::find($id);
+
+        if (!$user) {
+            return $this->errorResponse('User ID does not exist', Response::HTTP_NOT_FOUND);
+        }
 
         $user->fill($request->all());
-        // if no changes happen
+
         if ($user->isClean()) {
             return $this->errorResponse('At least one value must change', Response::HTTP_UNPROCESSABLE_ENTITY);
         }
+
         $user->save();
         return $this->successResponse($user);
-
-        // old code
-        /*
-        $this->validate($request, $rules);
-        //$user = User::findOrFail($id);
-        $user = User::where('userid', $id)->first();
-        if($user){
-            $user->fill($request->all());
-            // if no changes happen
-            if ($user->isClean()) {
-                return $this->errorResponse('At least one value must change', Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
-            $user->save();
-            return $this->successResponse($user);
-        }
-        {
-            return $this->errorResponse('User ID Does Not Exists', Response::HTTP_NOT_FOUND);
-        }
-        */
     }
 
     /**
-     * Remove an existing user
-     * @return Illuminate\Http\Response
+     * Delete a user
      */
     public function delete($id)
     {
-        $user = User::findOrFail($id);
-        $user->delete();
-        return $this->successResponse($user);
+        $user = User::find($id);
 
-        // old code
-        /*
-        $user = User::where('userid', $id)->first();
-        if($user){
-            $user->delete();
-            return $this->successResponse($user);
+        if (!$user) {
+            return $this->errorResponse('User ID does not exist', Response::HTTP_NOT_FOUND);
         }
-        {
-            return $this->errorResponse('User ID Does Not Exists', Response::HTTP_NOT_FOUND);
-        }
-        */
+
+        $user->delete();
+        return $this->successResponse(['message' => 'User deleted successfully']);
     }
 }

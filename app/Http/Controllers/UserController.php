@@ -43,7 +43,7 @@ class UserController extends Controller
         $rules = [
             'username' => 'required|max:20',
             'password' => 'required|max:20',
-            'gender' => 'required|in:Male,Female,Others',
+            'gender' => 'required|in:Male,Female,Other',
         ];
         
         $this->validate($request, $rules);
